@@ -1,0 +1,317 @@
+@@ -30,12 +30,16 @@
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>D:\Vidjagames\Steam\steamapps\common\ULTRAKILL\BepInEx\core\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>D:\Vidjagames\Steam\steamapps\common\ULTRAKILL\ULTRAKILL_Data\Managed\Assembly-CSharp.dll</HintPath>
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\ULTRAKILL\ULTRAKILL_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+  24 changes: 20 additions & 4 deletions24  
+UK Mod Manager/API/UKAPI.cs
+@@ -51,7 +51,7 @@ internal static IEnumerator InitializeAPI()
+            commonBundle = request.assetBundle;
+            triedLoadingBundle = true;
+            UltraModManager.InitializeManager();
+            
+
+            while (MapLoader.Instance == null)
+                yield return null;
+            Dictionary<string, AssetBundle> bundles = Traverse.Create(MapLoader.Instance).Field("loadedBundles").GetValue() as Dictionary<string, AssetBundle>;
+@@ -89,7 +89,7 @@ public static void RemoveDisableCyberGrindReason(string reason)
+        /// </summary>
+        public static bool ShouldSubmitCyberGrindScore()
+        {
+            Debug.Log("Not submitting cybergrind" );
+            Debug.Log("Not submitting cybergrind");
+            foreach (string reason in disableCybergrindReasons)
+                Debug.Log(" reason: " + reason);
+            return disableCybergrindReasons.Count == 0;
+@@ -142,20 +142,37 @@ public static ModInformation[] GetAllLoadedModInformation()
+        {
+            return UltraModManager.allLoadedMods.ToArray().Clone() as ModInformation[];
+        }
+
+        /// <summary>
+        /// Restarts Ultrakill
+        /// </summary>
+        /// </summary> 
+        public static void Restart() // thanks https://gitlab.com/vtolvr-mods/ModLoader/-/blob/release/Launcher/Program.cs
+        {
+            Application.Quit();
+            Debug.Log("Restarting Ultrakill!");
+
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = @"steam://run/1229490",
+                UseShellExecute = true,
+                WindowStyle = System.Diagnostics.ProcessWindowStyle.Minimized
+            };
+            System.Diagnostics.Process.Start(psi);
+
+            //Debug.Log("Path is \"" + Environment.CurrentDirectory + "\\BepInEx\\plugins\\UMM\\UltrakillRestarter.exe\"");
+            //string strCmdText;
+            //strCmdText = "/K \"" + Environment.CurrentDirectory + "\\BepInEx\\plugins\\UMM\\Ultrakill Restarter.exe\""/* + System.Diagnostics.Process.GetCurrentProcess().Id.ToString() + "\""*/;
+            ////strCmdText = "/K \"" + Environment.CurrentDirectory + "\\ULTRAKILL.exe\"";
+            //System.Diagnostics.Process.Start("CMD.exe", strCmdText);
+
+            //var psi = new System.Diagnostics.ProcessStartInfo 
+            //{
+            //    FileName = Environment.CurrentDirectory + "\\BepInEx\\plugins\\UMM\\Ultrakill Restarter.exe",
+            //    UseShellExecute = true,
+            //    WindowStyle = System.Diagnostics.ProcessWindowStyle.Minimized,
+            //    Arguments = System.Diagnostics.Process.GetCurrentProcess().Id.ToString()
+            //};
+            //System.Diagnostics.Process.Start(psi);
+        }
+
+        internal static class SaveFileHandler
+@@ -244,7 +261,6 @@ public static void RemoveModData(string modName, string key)
+            }
+        }
+
+
+        #region CustomWeapons
+        /* Shelved for now due to not being worth implementing over other features, will do later if the need arrises
+        /// <summary>
+  2 changes: 1 addition & 1 deletion2  
+UK Mod Manager/Harmony Patches/Cybergrind Patches.cs
+@@ -29,7 +29,7 @@ public static class Ensure_NoSubmitBadScoreRedundant // I am very paranoid
+        public static bool Prefix()
+        {
+            bool flag = UKAPI.ShouldSubmitCyberGrindScore();
+            Debug.Log("Flag is in submit " + flag);
+            Debug.Log("Should submit cybergrind score is " + flag);
+            return flag;
+        }
+    }
+  6 changes: 5 additions & 1 deletion6  
+UK Mod Manager/Harmony Patches/Mod UI Patches.cs
+@@ -181,7 +181,11 @@ void Halve(Transform tf, bool left)
+                    content.gameObject.SetActive(false);
+                    hoverText.SetActive(true);
+                    hoverText.transform.localPosition += new Vector3(0f, 260f, 0f);
+                    hoverText.GetComponentInChildren<Text>().text = "NO MODS FOUND";
+                    Text hText = hoverText.GetComponentInChildren<Text>();
+                    hText.text = "NO MODS FOUND\n" + Environment.CurrentDirectory + @"\BepInEx\UMM Mods\";
+                    hText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                    hText.verticalOverflow = VerticalWrapMode.Overflow;
+                    hText.fontSize /= 2;
+                }
+
+                __instance.variationMemory.gameObject.SetActive(true);
+  3 changes: 2 additions & 1 deletion3  
+UK Mod Manager/Plugin.cs
+@@ -5,10 +5,11 @@
+using BepInEx;
+using HarmonyLib;
+using Newtonsoft.Json.Linq;
+using System;
+
+namespace UMM.Loader
+{
+    [BepInPlugin("UMM", "UMM", VersionHandler.versionString)]
+    [BepInPlugin("UMM", "UMM", VersionHandler.VERSION)]
+    public class Plugin : BaseUnityPlugin
+    {
+        private static bool initialized = false;
+  4 changes: 2 additions & 2 deletions4  
+UK Mod Manager/UltraModManager.csproj
+@@ -7,8 +7,8 @@
+    <ProjectGuid>{DDEBE751-4B58-4EFE-9E8B-A9F8BAA98F33}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>UKMM</RootNamespace>
+    <AssemblyName>UKMM</AssemblyName>
+    <RootNamespace>UMM</RootNamespace>
+    <AssemblyName>UMM</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  6 changes: 3 additions & 3 deletions6  
+UK Mod Manager/VersionHandler.cs
+@@ -7,7 +7,7 @@ namespace UMM.Loader
+{
+    public static class VersionHandler
+    {
+        public const string versionString = "0.4.1"; // Should this be hardcoded? No it should not be
+        public const string VERSION = "0.4.1"; // Should this be hardcoded? No it should not be
+        public static  IEnumerator CheckVersion()
+        {
+            Debug.Log("UMM: Trying to get verison.");
+@@ -28,9 +28,9 @@ public static  IEnumerator CheckVersion()
+                Debug.Log(text);
+                JArray jObjects = JArray.Parse(text);
+                string latestVersion = jObjects[0].Value<string>("name");
+                if (latestVersion != versionString)
+                if (latestVersion != VERSION)
+                {
+                    Debug.Log("UMM: New version found: " + latestVersion + " while the current version is " + versionString);
+                    Debug.Log("UMM: New version found: " + latestVersion + " while the current version is " + VERSION);
+                    UltraModManager.outdated = true;
+                    UltraModManager.newLoaderVersion = latestVersion;
+                }
+  6 changes: 6 additions & 0 deletions6  
+UltraModManager.sln
+@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraModManager", "UK Mod M
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestMod", "TestMod\TestMod.csproj", "{26EF46E5-961C-4AD2-AF52-7823210C04FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ultrakill Restarter", "Ultrakill Restarter\Ultrakill Restarter.csproj", "{121CF959-93B7-4B0D-9428-0A7CE007D7FD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+@@ -21,6 +23,10 @@ Global
+		{26EF46E5-961C-4AD2-AF52-7823210C04FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26EF46E5-961C-4AD2-AF52-7823210C04FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26EF46E5-961C-4AD2-AF52-7823210C04FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{121CF959-93B7-4B0D-9428-0A7CE007D7FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{121CF959-93B7-4B0D-9428-0A7CE007D7FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{121CF959-93B7-4B0D-9428-0A7CE007D7FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{121CF959-93B7-4B0D-9428-0A7CE007D7FD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+ 6 changes: 6 additions & 0 deletions6  
+Ultrakill Restarter/App.config
+@@ -0,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <startup> 
+        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.7.2" />
+    </startup>
+</configuration>
+ 74 changes: 74 additions & 0 deletions74  
+Ultrakill Restarter/Restarter.cs
+@@ -0,0 +1,74 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using System.IO;
+using System.Threading;
+
+namespace UMM.Restarter
+{
+    public class Restarter
+    {
+        public static void Main(string[] args) // thanks https://gitlab.com/vtolvr-mods/ModLoader/-/blob/release/Launcher/Program.cs
+        {
+            Thread t = new Thread(() =>
+            {
+                Console.WriteLine(Environment.CurrentDirectory);
+                string bepinPath = Environment.CurrentDirectory + "\\BepInEx\\config\\BepInEx.cfg";
+                Console.WriteLine(bepinPath);
+                if (args.Length > 0)
+                {
+                    Console.WriteLine("Ultrakill's id is " + args[0]);
+                    bool FileOpen()
+                    {
+                        try
+                        {
+                            using (Stream stream = new FileStream(bepinPath, FileMode.Open))
+                            {
+                                Console.WriteLine("BepInEx.cfg is not open");
+                                stream.Close();
+                                return false;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("BepInEx.cfg is open, with exception\n" + e.ToString() + " \n" + e.Message);
+                            return true;
+                        }
+                    }
+                    try
+                    {
+                        while (Process.GetProcessById(int.Parse(args[0])) != null)
+                        {
+                            Thread.Sleep(100);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        while (FileOpen())
+                        {
+                            Thread.Sleep(100);
+                        }
+                    }
+                }
+                //string path = Environment.CurrentDirectory.Substring(0, Environment.CurrentDirectory.IndexOf("ULTRAKILL") + 9) + "\\ULTRAKILL.exe";
+                string path = @"C:\Program Files (x86)\Steam\steamapps\common\ULTRAKILL\ULTRAKILL.exe";
+                Console.WriteLine("Looking in directory " + path);
+                Thread.Sleep(5000);
+                var psi = new ProcessStartInfo
+                {
+                    FileName = path,
+                    UseShellExecute = true,
+                    WindowStyle = ProcessWindowStyle.Normal,
+                };
+                Process.Start(psi);
+                Console.WriteLine("Ultrakill started!");
+            });
+            t.Start();
+        }
+    }
+}
+ 45 changes: 45 additions & 0 deletions45  
+Ultrakill Restarter/Ultrakill Restarter.csproj
+@@ -0,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{121CF959-93B7-4B0D-9428-0A7CE007D7FD}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Ultrakill_Restarter</RootNamespace>
+    <AssemblyName>Ultrakill Restarter</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Restarter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
